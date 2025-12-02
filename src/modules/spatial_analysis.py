@@ -79,8 +79,8 @@ class SpatialAnalyzer:
             'temperature': ['mean', 'max', 'min'],
             'daily_passengers': ['sum', 'mean'],
             'stop_id': 'count',
-            'has_shelter': lambda x: (x == False).sum(),  # Count stops without shelter
-            'has_bench': lambda x: (x == False).sum()  # Count stops without bench
+            'has_shelter': lambda x: (~x).sum(),  # Count stops without shelter
+            'has_bench': lambda x: (~x).sum()  # Count stops without bench
         }).reset_index()
         
         # Flatten column names

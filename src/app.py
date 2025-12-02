@@ -374,11 +374,11 @@ def display_statistics(climate_gdf: gpd.GeoDataFrame,
         st.metric("Total Daily Passengers (Top Stops)", f"{avg_passengers:,}")
     
     with col2:
-        pct_no_shelter = (stops_gdf['has_shelter'] == False).sum() / len(stops_gdf) * 100
+        pct_no_shelter = (~stops_gdf['has_shelter']).sum() / len(stops_gdf) * 100
         st.metric("Stops Without Shelter", f"{pct_no_shelter:.1f}%")
     
     with col3:
-        pct_no_bench = (stops_gdf['has_bench'] == False).sum() / len(stops_gdf) * 100
+        pct_no_bench = (~stops_gdf['has_bench']).sum() / len(stops_gdf) * 100
         st.metric("Stops Without Bench", f"{pct_no_bench:.1f}%")
 
 

@@ -13,6 +13,9 @@ import duckdb
 class ClimateDataLoader:
     """Load and process Météo-France climate projection data (tas/tasmin/tasmax)."""
     
+    # 2.5 km tile size in degrees (approximate at Paris latitude)
+    TILE_SIZE = 0.0225
+    
     def __init__(self, data_dir: str):
         """
         Initialize the climate data loader.
@@ -61,8 +64,11 @@ class ClimateDataLoader:
         lon_min, lon_max = 1.4, 3.6
         lat_min, lat_max = 48.1, 49.2
         
-        # 2.5 km in degrees (approximate)
-        tile_size = 0.0225  # roughly 2.5 km at this latitude
+        # Use class constant for tile size
+        tile_size = self.TILE_SIZE
+        
+        # Seed for reproducible sample data
+        np.random.seed(42 + year)
         
         # Generate grid
         lons = np.arange(lon_min, lon_max, tile_size)
@@ -106,7 +112,7 @@ class ClimateDataLoader:
     def _convert_to_geodataframe(self, df: pd.DataFrame) -> gpd.GeoDataFrame:
         """Convert DataFrame with coordinates to GeoDataFrame."""
         geometries = [box(row['lon'], row['lat'], 
-                         row['lon'] + 0.0225, row['lat'] + 0.0225) 
+                         row['lon'] + self.TILE_SIZE, row['lat'] + self.TILE_SIZE) 
                      for _, row in df.iterrows()]
         gdf = gpd.GeoDataFrame(df, geometry=geometries, crs='EPSG:4326')
         return gdf
