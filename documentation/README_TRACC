@@ -1,0 +1,27 @@
+Dans le cadre du PNACC3, les autorités françaises ont défini une Trajectoire de Réchauffement de Référence pour l’Adaptation au Changement Climatique (TRACC).
+
+La TRACC vise à établir à quel climat s’adapter tout au long du 21e siècle. Elle s’appuie sur les engagements actuels des États et les traduit en trois niveaux de réchauffement planétaire auxquels les territoires doivent se préparer : +1,5°C en 2030, +2°C en 2050, et +3°C en 2100 par rapport à la  période pré-industrielle.
+Ces niveaux planétaires ont été déclinés à l’échelle des territoires français.
+Pour la France hexagonale et la Corse, ils correspondent à +2°C en 2030, +2,7°C en 2050 et +4°C en 2100 
+(correspondance pour les outremers : https://www.drias-climat.fr/accompagnement/sections/403)
+
+Pour inscrire vos travaux dans cette logique, il faut adopter une approche par niveaux de réchauffement, plutôt que l’approche plus classique fondée sur un horizon temporel fixe.
+
+Concrètement, cela revient à travailler sur les fenêtres temporelles correspondant, pour chaque modèle, au moment où il atteint le niveau de réchauffement ciblé. Ces fenêtres varient selon les modèles. Elles sont indiquées ici :
+
+- pour les données OM : https://www.drias-climat.fr/accompagnement/sections/403
+- pour la métropole : fichiers de type dates_RWL_TRACC_FR-Metro...
+
+******************
+Structure des fichiers sur la métropole
+
+GCM_SCÉNARIO_MEMBRE_RCM_CORRECTION DATE1, DATE2, DATE3
+
+Chaque DATE correspond à l’année centrale de la fenêtre temporelle sur laquelle le modèle atteint l’un des niveaux de réchauffement définis dans la TRACC.
+La fenêtre associée est : [DATE − 10 ; DATE + 9].
+- Si seule DATE1 est indiquée, le modèle atteint uniquement le premier niveau de réchauffement (cas de simulations présentant un réchauffement limité).
+- Si DATE1 et DATE2 apparaissent, le modèle atteint les deux premiers niveaux, mais pas le troisième.
+- Si les trois dates (DATE1, DATE2, DATE3) sont présentes, la simulation couvre l’ensemble des niveaux de réchauffement définis dans la TRACC.
+******************
+
+Plus d'info : https://www.drias-climat.fr/accompagnement/sections/403.

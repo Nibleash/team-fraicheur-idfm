@@ -1,0 +1,76 @@
+Ce répertoire contient des fichiers ou exemples de scripts qui peuvent être utiles pour le traitement des données climatiques.
+
+***********************
+Donnees-Territoires
+***********************
+
+Territoires Outremers
+------------------------
+
+donnees_grillees (fichiers netcdf) : 
+fracLand_...: masques terre-mer
+orog... : orographie
+
+shape_files : données géospatiales
+
+Metropole
+----------
+
+donnees_grillees (fichiers netcdf) : 
+fracLand_METROPOLE_SAFRAN.nc : identifie les points de la grille SAFRAN situés en France (permet de masquer les points suisses)
+
+shape_files : données géospatiales
+
+
+***********
+SCRIPTS
+***********
+
+Manipulation de fichiers netcdf (cdo)
+-------------------------------------
+
+commandes_cdo.sh : script bash contenant des commandes cdo de base
+compute_time_series_1y_RCM_FR-Metro.sh
+
+compute_time_series_1y_RCM_FR-Metro.sh : script qui produit, pour une variable donnée, une série temporelle en moyenne annuelle et en moyenne sur le territoire
+Rq : ce script montre aussi comment faire une boucle sur l'ensemble des simulations RCM disponibles (à partir de la liste des RCM stockée dans le répertoire LISTES_RCM)
+
+
+
+Représentation spatiale des données (python)
+--------------------------------------------
+
+tracer_carte_1variable_1data.py
+script python permettant de lire une variable et tracer une carte moyenne de celle-ci
+
+plot_figure_2D_Reunion.py
+script python pour faire une carte 2D sur le territoire de la Reunion, pour les territoires ultramarins tous les shapefiles sont disponibles
+
+fichier bib_param_matplotlib_palette_couleur.py : palettes de couleurs predefinies
+
+
+
+***********
+LISTES-RCM
+***********
+
+liste_RCM.txt : liste des simulations RCM disponibles
+Structure du fichier : 1 simulation par ligne : GCM_MEMBRE_RCM_SCENARIO
+
+liste_RCM_ssp585.txt : idem pour les simulations ssp585 uniquement
+
+liste_RCM_ssp370.txt : idem pour les simulations ssp370 uniquement
+
+
+
+**********
+TRACC
+**********
+
+Fichiers dates_RWL... nécessaires pour travailler dans le cadre de la Trajectoire de Réchauffement de Référence pour l’Adaptation au Changement Climatique (TRACC)
+
+cf TRACC/README_TRACC
+
+
+
+
