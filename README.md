@@ -1,53 +1,56 @@
-# Team Fraicheur IDFM 🌡️
+# Team Fraicheur IDFM 🌡️🚌
 
-A Streamlit application to identify priority bus stops and lines for cooling interventions in Île-de-France based on climate projections and passenger data.
+A Python application to identify priority bus lines for air conditioning equipment based on climate projections and current equipment status in Île-de-France.
 
 ## Overview
 
-This application helps urban planners and transit authorities identify bus stops and lines that are most vulnerable to heat and need cooling interventions (shelters, vegetation, cooling systems, etc.). It combines:
+This tool helps transit authorities prioritize bus line upgrades by identifying lines that:
+- Pass through the hottest areas (top 1% hottest 2.5km tiles)
+- Have many stops in these hot zones
+- Currently lack air conditioning
 
-1. **Météo-France climate projections** (tas/tasmin/tasmax at 2.5 km resolution)
-2. **IDFM bus stops and lines data** (locations, passenger volumes, amenities)
-3. **Spatial analysis** to match stops with climate tiles
-4. **Priority scoring** based on temperature, passenger volume, and lack of amenities
+It combines:
+
+1. **Météo-France climate projections** from S3 (summer temperatures at 2.5 km resolution, scenario SSP370)
+2. **IDFM bus network data** (stops locations, lines, air conditioning status)
+3. **Spatial analysis** to identify stops in hot zones
+4. **Priority scoring** based on temperature, number of affected stops, and AC status
 
 ## Features
 
-- 📊 Interactive year selection for climate projections (2025-2050)
-- 🗺️ Interactive map visualization with climate tiles and priority stops
-- 🚏 Ranked list of priority bus stops
-- 🚌 Ranked list of priority bus lines
-- 📈 Statistical analysis and temperature distribution
-- 📥 Export results to CSV
+- 🌡️ Loads climate data directly from Météo-France S3 bucket (no local files needed)
+- 🗺️ Identifies top 1% hottest 2.5km tiles in Île-de-France
+- 🚏 Spatially joins bus stops with hot zones
+- 🚌 Aggregates by bus line with temperature and stop count
+- 🎯 Scores lines based on configurable weights (temperature: 40%, stops: 30%, AC status: 30%)
+- 📊 Exports results to CSV files
 
 ## Project Structure
 
 ```
 team-fraicheur-idfm/
 ├── src/
-│   ├── app.py                          # Main Streamlit application
-│   └── modules/
-│       ├── __init__.py
-│       ├── climate_loader.py           # Load Météo-France climate data
-│       ├── idfm_loader.py             # Load IDFM stops/lines data
-│       ├── spatial_analysis.py        # Spatial joins and analysis
-│       ├── scoring.py                 # Priority scoring logic
-│       └── visualization.py           # Map visualization
+│   ├── climate_loader.py              # Load climate data from S3
+│   ├── idfm_loader.py                 # Load IDFM stops/lines data
+│   ├── spatial_analysis.py            # Spatial joins and analysis
+│   └── scoring.py                     # Priority scoring logic
 ├── data/
-│   ├── climate/                       # Climate projection files
-│   ├── idfm/                         # IDFM transit data
-│   ├── validation/                   # Validation datasets
-│   └── README.md                     # Data documentation
+│   └── idfm/                          # IDFM transit data
+│       ├── arrets.csv                 # Bus stops
+│       ├── lignes.csv                 # Bus lines
+│       └── arrets-lignes.csv          # Stops-lines mapping
+├── main.py                            # Main analysis script
 ├── requirements.txt                   # Python dependencies
-└── README.md                         # This file
+└── README.md                          # This file
 ```
 
 ## Installation
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.9 or higher
 - pip package manager
+- Internet connection (to access Météo-France S3 bucket)
 
 ### Setup
 
@@ -57,110 +60,165 @@ git clone https://github.com/Nibleash/team-fraicheur-idfm.git
 cd team-fraicheur-idfm
 ```
 
-2. Install dependencies:
+2. Create a virtual environment (recommended):
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
+
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. (Optional) Add your data files to the `data/` directory following the format in `data/README.md`. If no data files are provided, the app will generate sample data automatically.
+4. Download IDFM data files and place them in `data/idfm/`:
+   - `arrets.csv` - Bus stops
+   - `lignes.csv` - Bus lines
+   - `arrets-lignes.csv` - Stops-lines mapping
 
 ## Usage
 
-### Running the Application
+### Running the Analysis
 
 ```bash
-streamlit run src/app.py
+python main.py
 ```
 
-The application will open in your default web browser at `http://localhost:8501`.
+The script will:
+1. Load climate data from Météo-France S3 bucket for the specified year (2075)
+2. Extract the top 1% hottest 2.5km tiles in summer (June-August)
+3. Load IDFM bus stops and lines data
+4. Perform spatial join to find stops in hot zones
+5. Calculate priority scores for each bus line
+6. Display results in console and save to CSV files
 
-### Using the Interface
+### Output Files
 
-1. **Select Year**: Choose a climate projection year (2025-2050)
-2. **Select Climate Variable**: 
-   - `tas`: Average temperature
-   - `tasmin`: Minimum temperature
-   - `tasmax`: Maximum temperature
-3. **Set Temperature Threshold**: Filter areas exceeding this temperature
-4. **Set Display Options**: Number of top priority stops/lines to show
-5. **Click "Run Analysis"**: Generate results and visualizations
+The analysis generates three CSV files:
+- `hot_squares.csv` - The hottest climate tiles (coordinates and temperature)
+- `stops_in_hot_zones.csv` - Bus stops located in hot zones
+- `prioritized_lines.csv` - Bus lines ranked by priority score
 
-### Interpreting Results
+### Configuration
 
-#### Priority Score
+Edit `main.py` to adjust parameters:
+
+```python
+YEAR = 2075           # Climate projection year
+PERCENTILE = 0.99     # Top 1% hottest tiles (0.90 = top 10%)
+
+# Scoring weights
+scorer = LineScorer(weights={
+    "temperature": 0.40,        # 40% weight
+    "stops": 0.30,              # 30% weight  
+    "air_conditioning": 0.30    # 30% weight
+})
+```
+
+## Priority Scoring Methodology
 
 The priority score (0-100) is calculated using weighted factors:
-- **Temperature** (35%): Higher temperature = higher priority
-- **Passenger Volume** (30%): More passengers = higher priority
-- **Lack of Shelter** (20%): No shelter = higher priority
-- **Lack of Bench** (15%): No bench = higher priority
 
-#### Map View
+### Temperature Score (40%)
+- Normalized average temperature of all stops in hot zones
+- Higher temperature = higher priority
 
-- **Red tiles**: Hottest climate zones
-- **Red/Orange circles**: High priority bus stops
-- Click on stops for detailed information
+### Stops Score (30%)
+- Number of stops the line has in hot zones
+- More stops = higher priority (more riders affected)
+
+### Air Conditioning Score (30%)
+- **No AC or Unknown** (1.0): Highest priority - line urgently needs equipment
+- **Partial AC** (0.5): Medium priority - line partially equipped
+- **Full AC** (0.0): Lowest priority - line already fully equipped
+
+**Formula**: `priority_score = (0.40 × temp_score + 0.30 × stops_score + 0.30 × ac_score) × 100`
 
 ## Data Format
 
+### IDFM Data Files
+
+#### arrets.csv (Bus Stops)
+Required columns:
+- `ArRId`: Stop ID
+- `ArRGeopoint`: Coordinates as "latitude, longitude"
+- `ArRType`: Stop type (filter for "bus")
+
+#### lignes.csv (Bus Lines)
+Required columns:
+- `id_line`: Line ID
+- `name_line`: Line name/number
+- `transportmode`: Transport mode (filter for "bus")
+- `air_conditioning`: "true", "partial", "false", or "unknown"
+
+#### arrets-lignes.csv (Stops-Lines Mapping)
+Required columns:
+- `route_id`: Line ID (with "IDFM:" prefix - will be removed)
+- `stop_id`: Stop ID (with "IDFM:" prefix - will be removed)
+- `mode`: Transport mode (filter for "Bus")
+
 ### Climate Data
 
-Place climate files in `data/climate/` with naming: `{variable}_{year}.csv`
-
-Required columns:
-- `lon`, `lat`: Coordinates (WGS84)
-- `temperature`: Temperature in Celsius
-
-### IDFM Stops Data
-
-Place in `data/idfm/stops.csv`
-
-Required columns:
-- `stop_id`, `stop_name`, `lon`, `lat`
-- `lines`: Comma-separated line IDs
-- `daily_passengers`: Integer
-- `has_shelter`, `has_bench`: Boolean
-
-### IDFM Lines Data
-
-Place in `data/idfm/lines.csv`
-
-Required columns:
-- `line_id`, `line_name`, `line_type`
-- `total_stops`, `daily_frequency`: Integer
-
-See `data/README.md` for complete format specifications.
+Climate data is automatically loaded from Météo-France S3 bucket:
+- Source: `meteofrance-drias` bucket on `object.files.data.gouv.fr`
+- Variable: `tasAdjust` (adjusted temperature)
+- Scenario: SSP370
+- Resolution: 2.5km tiles
+- Coverage: Île-de-France region (lat: 48.1-49.1, lon: 1.4-3.6)
 
 ## Technology Stack
 
-- **Streamlit**: Web application framework
+- **xarray**: Load NetCDF climate data
+- **s3fs**: Access Météo-France S3 bucket
 - **GeoPandas**: Geospatial data processing
-- **DuckDB**: In-memory data queries
-- **Folium**: Interactive maps
 - **Pandas/NumPy**: Data analysis
-- **Shapely**: Geometric operations
+- **Shapely**: Geometric operations (2.5km box tiles)
 
-## Development
+## Module Descriptions
 
-### Module Descriptions
+### climate_loader.py
+Loads climate data from Météo-France S3 bucket:
+- Connects to S3 anonymously
+- Loads NetCDF files with xarray
+- Filters to Île-de-France region
+- Extracts summer months (JJA)
+- Calculates mean temperature per tile
+- Converts to GeoDataFrame with 2.5km box geometries
 
-- **climate_loader.py**: Loads and processes Météo-France climate projection data
-- **idfm_loader.py**: Loads and processes IDFM bus stops and lines
-- **spatial_analysis.py**: Performs spatial joins between stops and climate tiles
-- **scoring.py**: Calculates priority scores for stops and lines
-- **visualization.py**: Creates interactive Folium maps
+### idfm_loader.py
+Loads IDFM transit data:
+- Parses CSV files with stops and lines
+- Converts geopoint strings to coordinates
+- Filters for bus mode only
+- Creates Point geometries for stops
+- Maps stops to lines
 
-### Extending the Application
+### spatial_analysis.py
+Performs geospatial operations:
+- Spatial join between stops (points) and climate tiles (polygons)
+- Finds all stops within hot zones
 
-To modify scoring weights, edit the `PriorityScorer` class initialization in `src/modules/scoring.py`:
+### scoring.py
+Calculates priority scores:
+- Normalizes temperature and stop count
+- Assigns AC status scores
+- Computes weighted priority score
+- Ranks lines by priority
 
-```python
-weights = {
-    'temperature': 0.35,
-    'passenger_volume': 0.30,
-    'lack_of_shelter': 0.20,
-    'lack_of_bench': 0.15
-}
+## Example Output
+
+```
+Rank #1: C01848 - R
+  Temperature: 21.70°C
+  Stops in hot zones: 2
+  Air Conditioning: unknown
+  Priority Score: 85.23
+
+Rank #2: C01097 - 61
+  Temperature: 21.64°C
+  Stops in hot zones: 28
+  Air Conditioning: partial
+  Priority Score: 74.56
 ```
 
 ## Contributing
@@ -173,7 +231,7 @@ This project is provided as-is for urban planning and climate adaptation purpose
 
 ## Data Sources
 
-- **Climate Data**: Météo-France DRIAS platform (http://www.drias-climat.fr/)
+- **Climate Data**: Météo-France DRIAS 2025 / SocleM-Climat platform (https://object.files.data.gouv.fr/meteofrance-drias/)
 - **Transit Data**: Île-de-France Mobilités Open Data (https://data.iledefrance-mobilites.fr/)
 
 ## Acknowledgments
