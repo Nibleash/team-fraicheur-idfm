@@ -200,7 +200,7 @@ Performs geospatial operations:
 
 ### scoring.py
 Calculates priority scores:
-- Normalizes temperature and stop count
+- Normalizes temperature and stop count and validations
 - Assigns AC status scores
 - Computes weighted priority score
 - Ranks lines by priority
